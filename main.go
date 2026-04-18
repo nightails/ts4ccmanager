@@ -11,13 +11,12 @@ import (
 
 func main() {
 	// Parse the libraryfolders.vdf and display the result
-	home, err := os.UserHomeDir()
+	root, err := getSteamRootPath()
 	if err != nil {
 		log.Fatal(err)
 	}
-	lf := filepath.Join(home, ".steam", "steam", "steamapps", "libraryfolders.vdf")
 
-	f, err := os.Open(lf)
+	f, err := getLibraryFoldersVDFFile(root)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -38,4 +37,19 @@ func main() {
 	} else {
 		fmt.Println("Sims 4 not found on Steam!")
 	}
+}
+
+// getSteamRootPath returns the path to the Steam root directory.
+// Assumes the OS is Linux.
+func getSteamRootPath() (string, error) {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(home, ".steam", "steam"), nil
+}
+
+// getLibraryFoldersVDFFile returns the file handle for the libraryfolders.vdf file.
+func getLibraryFoldersVDFFile(rootPath string) (*os.File, error) {
+	return os.Open(filepath.Join(rootPath, "steamapps", "libraryfolders.vdf"))
 }
