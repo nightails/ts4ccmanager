@@ -10,33 +10,50 @@ import (
 )
 
 func main() {
-	// Parse the libraryfolders.vdf and display the result
-	root, err := getSteamRootPath()
+	p, err := getModFolderPath()
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	if p == "" {
+		log.Fatal("Sims 4 not found on Steam!")
+	}
+
+	fmt.Println(p)
+}
+
+// getModFolderPath returns the path to the Sims 4 mod folder.
+func getModFolderPath() (string, error) {
+	// Todo: get path from config file
+
+	// get steam root
+	root, err := getSteamRootPath()
+	if err != nil {
+		return "", err
+	}
+
+	// get libraryfolders.vdf
 	f, err := getLibraryFoldersVDFFile(root)
 	if err != nil {
-		log.Fatal(err)
+		return "", err
 	}
 	defer f.Close()
 
+	// parse libraryfolders.vdf into a map[string]interface{}
 	p := vdf.NewParser(f)
 	m, err := p.Parse()
 	if err != nil {
-		log.Fatal(err)
+		return "", err
 	}
 
-	lmap := m["libraryfolders"].(map[string]interface{})
-	lib2 := lmap["2"].(map[string]interface{})
-	apps := lib2["apps"].(map[string]interface{})
-	_, ok := apps["1222670"]
-	if ok {
-		fmt.Println("Found Sims 4 on Steam!")
-	} else {
-		fmt.Println("Sims 4 not found on Steam!")
+	// get library path that contains Sims 4 - 1222670
+	path, err := getLibraryPathContainsAppID(m, "1222670")
+	if err != nil {
+		return "", err
 	}
+
+	// return library path for now
+	return path, nil
 }
 
 // getSteamRootPath returns the path to the Steam root directory.
@@ -52,4 +69,40 @@ func getSteamRootPath() (string, error) {
 // getLibraryFoldersVDFFile returns the file handle for the libraryfolders.vdf file.
 func getLibraryFoldersVDFFile(rootPath string) (*os.File, error) {
 	return os.Open(filepath.Join(rootPath, "steamapps", "libraryfolders.vdf"))
+}
+
+// getLibraryPathContainsAppID returns the path to the library folder that contains the specified app ID.
+func getLibraryPathContainsAppID(m map[string]interface{}, id string) (string, error) {
+	// check for apps section
+	if appsRaw, ok := m["apps"]; ok {
+		apps, ok := appsRaw.(map[string]interface{})
+		if !ok {
+			return "", fmt.Errorf("apps is not a map[string]interface{}")
+		}
+		if _, found := apps[id]; found {
+			if pathRaw, ok := m["path"]; ok {
+				if path, ok := pathRaw.(string); ok {
+					return path, nil
+				}
+			}
+			return "", fmt.Errorf("path is not a string")
+		}
+	}
+
+	// recurse into child maps.
+	for _, v := range m {
+		child, ok := v.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		path, err := getLibraryPathContainsAppID(child, id)
+		if err != nil {
+			return "", fmt.Errorf("getLibraryPathContainsAppID: %w", err)
+		}
+		if path != "" {
+			return path, nil
+		}
+	}
+
+	return "", nil
 }
