@@ -67,6 +67,12 @@ func getModFolderPath() (string, error) {
 		return "", fmt.Errorf("sims 4 prefix not found at %s", path)
 	}
 
+	// join path with Sims 4 mod folder
+	path = filepath.Join(path, "pfx", "drive_c", "users", "steamuser", "Documents", "Electronic Arts", "The Sims 4", "Mods")
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		return "", fmt.Errorf("sims 4 mod folder not found at %s", path)
+	}
+
 	return path, nil
 }
 
