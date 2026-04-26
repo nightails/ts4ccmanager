@@ -22,6 +22,8 @@ func main() {
 	fmt.Println(p)
 }
 
+const SIMS4_APP_ID = "1222670"
+
 // getModFolderPath returns the path to the Sims 4 mod folder.
 func getModFolderPath() (string, error) {
 	// Todo: get path from config file
@@ -46,13 +48,25 @@ func getModFolderPath() (string, error) {
 		return "", err
 	}
 
-	// get library path that contains Sims 4 - 1222670
-	path, err := getLibraryPathContainsAppID(m, "1222670")
+	// get library path that contains Sims 4
+	path, err := getLibraryPathContainsAppID(m, SIMS4_APP_ID)
 	if err != nil {
 		return "", err
 	}
+	if path == "" {
+		return "", fmt.Errorf("sims 4 not found on Steam")
+	}
+	// validate library path
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		return "", fmt.Errorf("sims 4 library folder not found at %s", path)
+	}
 
-	// return library path for now
+	// join path with Sims 4 prefix
+	path = filepath.Join(path, "steamapps", "compatdata", SIMS4_APP_ID)
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		return "", fmt.Errorf("sims 4 prefix not found at %s", path)
+	}
+
 	return path, nil
 }
 
