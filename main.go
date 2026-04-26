@@ -63,11 +63,18 @@ func getSteamRootPath() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return filepath.Join(home, ".steam", "steam"), nil
+	path := filepath.Join(home, ".steam", "steam")
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		return "", fmt.Errorf("steam root directory not found at %s", path)
+	}
+	return path, nil
 }
 
 // getLibraryFoldersVDFFile returns the file handle for the libraryfolders.vdf file.
 func getLibraryFoldersVDFFile(rootPath string) (*os.File, error) {
+	if rootPath == "" {
+		return nil, fmt.Errorf("rootPath cannot be empty")
+	}
 	return os.Open(filepath.Join(rootPath, "steamapps", "libraryfolders.vdf"))
 }
 
