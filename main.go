@@ -22,7 +22,7 @@ func main() {
 	fmt.Println(p)
 }
 
-const SIMS4_APP_ID = "1222670"
+const Sims4AppId = "1222670"
 
 // getModFolderPath returns the path to the Sims 4 mod folder.
 func getModFolderPath() (string, error) {
@@ -49,7 +49,7 @@ func getModFolderPath() (string, error) {
 	}
 
 	// get library path that contains Sims 4
-	path, err := getLibraryPathContainsAppID(m, SIMS4_APP_ID)
+	path, err := getLibraryPathContainsAppID(m, Sims4AppId)
 	if err != nil {
 		return "", err
 	}
@@ -62,7 +62,7 @@ func getModFolderPath() (string, error) {
 	}
 
 	// join path with Sims 4 prefix
-	path = filepath.Join(path, "steamapps", "compatdata", SIMS4_APP_ID)
+	path = filepath.Join(path, "steamapps", "compatdata", Sims4AppId)
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		return "", fmt.Errorf("sims 4 prefix not found at %s", path)
 	}
