@@ -10,6 +10,15 @@
 - **Steam / Proton Auto-Detection**: Automatically detects the Sims 4 Mods directory in Linux Steam Proton installations with manual configuration override support.
 - **Pure Go & Zero CGO**: Built with a CGO-free pure Go SQLite driver (`modernc.org/sqlite`) for single-binary portability across Linux, macOS, and Windows.
 
+## Documentation
+
+Comprehensive documentation is available in the [`docs/`](docs/README.md) directory:
+- [User Guide](docs/user-guide.md) - Player walkthrough, managing packages, scripts, and archives.
+- [CLI Reference](docs/cli-reference.md) - Full command syntax, flags, arguments, and exit codes.
+- [Configuration Guide](docs/configuration.md) - Settings, XDG directory specifications, and Steam Proton auto-detection.
+- [System Architecture](docs/architecture.md) - Component design, database schema, transactional safety, and security.
+- [Development & Contributing](docs/development.md) - Build instructions, testing suite, and developer guidelines.
+
 ## Installation
 
 ```bash
