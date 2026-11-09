@@ -53,21 +53,34 @@ func TestExtractZipOnlyCopiesSupportedFiles(t *testing.T) {
 
 	wantPaths := []string{
 		filepath.Join(destDir, "hair.package"),
-		filepath.Join(destDir, "scripts", "mod.ts4script"),
-		filepath.Join(destDir, "scripts", "UPPER.PACKAGE"),
+		filepath.Join(destDir, "mod.ts4script"),
+		filepath.Join(destDir, "UPPER.PACKAGE"),
 	}
 	sort.Strings(extracted)
 	sort.Strings(wantPaths)
 	if !reflect.DeepEqual(extracted, wantPaths) {
 		t.Errorf("unexpected extracted paths: got %v, want %v", extracted, wantPaths)
 	}
-	for _, name := range []string{"readme.txt", "nested/archive.zip", "scripts/notes.TXT"} {
+	for _, name := range []string{"readme.txt", "nested/archive.zip", "scripts/notes.TXT", "scripts/mod.ts4script", "scripts/UPPER.PACKAGE"} {
 		if _, err := os.Stat(filepath.Join(destDir, filepath.FromSlash(name))); !os.IsNotExist(err) {
-			t.Errorf("unsupported file %q should not be extracted", name)
+			t.Errorf("archive path %q should not be preserved in the flattened output", name)
 		}
 	}
 	if _, err := os.Stat(filepath.Join(destDir, "empty")); !os.IsNotExist(err) {
 		t.Errorf("empty archive directory should not be created")
+	}
+}
+
+func TestExtractZipRejectsDuplicateBasenames(t *testing.T) {
+	tempDir := t.TempDir()
+	zipPath := filepath.Join(tempDir, "mods.zip")
+	createTestZip(t, zipPath, map[string]string{
+		"one/shared.package": "first",
+		"two/shared.package": "second",
+	})
+
+	if _, err := ExtractZip(zipPath, filepath.Join(tempDir, "mods")); err == nil {
+		t.Fatal("expected duplicate flattened filenames to be rejected")
 	}
 }
 

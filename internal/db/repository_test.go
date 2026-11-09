@@ -1,7 +1,10 @@
 package db
 
 import (
+	"database/sql"
 	"errors"
+	"path/filepath"
+	"reflect"
 	"testing"
 	"time"
 )
@@ -25,9 +28,13 @@ func TestRepositoryCRUD(t *testing.T) {
 		FileName: "awesome_hair.package",
 		FilePath: "/sims4/mods/awesome_hair.package",
 		FileHash: "hash123456789",
-		Version:  "1.0.0",
-		Author:   "CreatorA",
-		Status:   "active",
+		InstalledFiles: []string{
+			"/sims4/mods/awesome_hair.package",
+			"/sims4/mods/awesome_hair.ts4script",
+		},
+		Version: "1.0.0",
+		Author:  "CreatorA",
+		Status:  "active",
 	}
 
 	// 1. Test Insert
@@ -46,7 +53,7 @@ func TestRepositoryCRUD(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to get mod by ID: %v", err)
 	}
-	if fetched.Name != mod.Name || fetched.FileHash != mod.FileHash || fetched.Author != mod.Author {
+	if fetched.Name != mod.Name || fetched.FileHash != mod.FileHash || fetched.Author != mod.Author || !reflect.DeepEqual(fetched.InstalledFiles, mod.InstalledFiles) {
 		t.Errorf("fetched mod does not match inserted mod: %+v vs %+v", fetched, mod)
 	}
 
@@ -142,6 +149,49 @@ func TestRepositoryCRUD(t *testing.T) {
 	}
 	if len(remainingMods) != 1 {
 		t.Errorf("expected 1 remaining mod, got %d", len(remainingMods))
+	}
+}
+
+func TestOpenMigratesLegacyModsTable(t *testing.T) {
+	dbPath := filepath.Join(t.TempDir(), "legacy.db")
+	legacyDB, err := sql.Open("sqlite", dbPath)
+	if err != nil {
+		t.Fatalf("failed to create legacy database: %v", err)
+	}
+	_, err = legacyDB.Exec(`
+		CREATE TABLE mods (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			name TEXT NOT NULL,
+			file_name TEXT NOT NULL,
+			file_path TEXT NOT NULL UNIQUE,
+			file_hash TEXT NOT NULL,
+			version TEXT DEFAULT '',
+			author TEXT DEFAULT '',
+			installed_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			status TEXT DEFAULT 'active'
+		);
+		INSERT INTO mods (name, file_name, file_path, file_hash) VALUES ('Legacy', 'legacy_pack', '/mods/legacy_pack', 'legacy-hash');
+	`)
+	if err != nil {
+		_ = legacyDB.Close()
+		t.Fatalf("failed to prepare legacy schema: %v", err)
+	}
+	if err := legacyDB.Close(); err != nil {
+		t.Fatalf("failed to close legacy database: %v", err)
+	}
+
+	database, err := Open(dbPath)
+	if err != nil {
+		t.Fatalf("failed to migrate legacy database: %v", err)
+	}
+	defer database.Close()
+
+	mod, err := NewRepository(database).GetModByID(1)
+	if err != nil {
+		t.Fatalf("failed to read legacy mod after migration: %v", err)
+	}
+	if mod.FilePath != "/mods/legacy_pack" || len(mod.InstalledFiles) != 0 {
+		t.Errorf("legacy record was not preserved with empty installed-file list: %+v", mod)
 	}
 }
 

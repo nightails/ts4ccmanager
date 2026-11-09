@@ -35,10 +35,15 @@ func ExtractZip(zipPath string, destDir string) ([]string, error) {
 	}
 
 	var extractedFiles []string
+	seenNames := make(map[string]bool)
 	cleanDestDir := filepath.Clean(destDir)
 
 	for _, f := range r.File {
-		targetPath := filepath.Join(cleanDestDir, f.Name)
+		entryPath := filepath.Clean(filepath.FromSlash(f.Name))
+		if filepath.IsAbs(entryPath) || filepath.VolumeName(entryPath) != "" || entryPath == ".." || strings.HasPrefix(entryPath, ".."+string(os.PathSeparator)) {
+			return nil, fmt.Errorf("illegal file path in zip: %s", f.Name)
+		}
+		targetPath := filepath.Join(cleanDestDir, entryPath)
 		cleanTarget := filepath.Clean(targetPath)
 
 		// Security check: zip-slip prevention
@@ -55,17 +60,20 @@ func ExtractZip(zipPath string, destDir string) ([]string, error) {
 			continue
 		}
 
-		// Ensure parent directory exists
-		if err := os.MkdirAll(filepath.Dir(cleanTarget), 0755); err != nil {
-			return nil, fmt.Errorf("failed to create parent directory for %s: %w", cleanTarget, err)
+		fileName := filepath.Base(entryPath)
+		nameKey := strings.ToLower(fileName)
+		if seenNames[nameKey] {
+			return nil, fmt.Errorf("duplicate supported filename in zip: %s", fileName)
 		}
+		seenNames[nameKey] = true
+		cleanTarget = filepath.Join(cleanDestDir, fileName)
 
 		rc, err := f.Open()
 		if err != nil {
 			return nil, fmt.Errorf("failed to read file %s in zip: %w", f.Name, err)
 		}
 
-		outFile, err := os.OpenFile(cleanTarget, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode())
+		outFile, err := os.OpenFile(cleanTarget, os.O_WRONLY|os.O_CREATE|os.O_EXCL, f.Mode())
 		if err != nil {
 			_ = rc.Close()
 			return nil, fmt.Errorf("failed to create output file %s: %w", cleanTarget, err)

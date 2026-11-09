@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS mods (
     name TEXT NOT NULL,
     file_name TEXT NOT NULL,
     file_path TEXT NOT NULL UNIQUE,
+    installed_files TEXT NOT NULL DEFAULT '[]',
     file_hash TEXT NOT NULL,
     version TEXT DEFAULT '',
     author TEXT DEFAULT '',
@@ -48,6 +49,42 @@ func Open(dbPath string) (*sql.DB, error) {
 		_ = db.Close()
 		return nil, fmt.Errorf("failed to initialize schema: %w", err)
 	}
+	if err := ensureInstalledFilesColumn(db); err != nil {
+		_ = db.Close()
+		return nil, fmt.Errorf("failed to migrate database: %w", err)
+	}
 
 	return db, nil
+}
+
+func ensureInstalledFilesColumn(db *sql.DB) error {
+	rows, err := db.Query("PRAGMA table_info(mods)")
+	if err != nil {
+		return err
+	}
+	columnExists := false
+	for rows.Next() {
+		var cid, notNull, primaryKey int
+		var name, dataType string
+		var defaultValue sql.NullString
+		if err := rows.Scan(&cid, &name, &dataType, &notNull, &defaultValue, &primaryKey); err != nil {
+			_ = rows.Close()
+			return err
+		}
+		if name == "installed_files" {
+			columnExists = true
+		}
+	}
+	if err := rows.Err(); err != nil {
+		_ = rows.Close()
+		return err
+	}
+	if err := rows.Close(); err != nil {
+		return err
+	}
+	if columnExists {
+		return nil
+	}
+	_, err = db.Exec("ALTER TABLE mods ADD COLUMN installed_files TEXT NOT NULL DEFAULT '[]'")
+	return err
 }
