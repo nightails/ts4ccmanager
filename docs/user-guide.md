@@ -93,12 +93,12 @@ ts4ccmanager add ~/Downloads/custom_interactions.ts4script
 *Result:* The script mod is placed directly in the `Mods` root directory to ensure The Sims 4 game engine can execute it.
 
 ### Compressed Archives (`.zip`)
-Many creators distribute mod sets or multi-part mods in `.zip` archives. `ts4ccmanager` automatically extracts the archive into a dedicated subfolder named after the archive.
+Many creators distribute mod sets or multi-part mods in `.zip` archives. `ts4ccmanager` extracts only `.package` and `.ts4script` files directly into the `Mods` root; paths inside the archive are flattened to filenames.
 
 ```bash
 ts4ccmanager add ~/Downloads/kitchen_set.zip
 ```
-*Result:* Creates a subfolder `Mods/kitchen_set/` containing all extracted `.package` and `.ts4script` files and tracks the folder in the database.
+*Result:* Copies supported files such as `sofa.package` and `scripts/gameplay.ts4script` to `Mods/sofa.package` and `Mods/gameplay.ts4script`, then tracks all files with the archive's mod record. If two archive entries have the same filename, or a destination already exists, installation fails rather than overwriting it.
 
 ### Adding Metadata (Name, Version, Author)
 You can attach human-readable metadata when installing a mod:
@@ -181,9 +181,9 @@ ts4ccmanager update 1 ~/Downloads/cas_eyelashes_v5.package --version "5.0"
 ```
 
 What happens during an update:
-1. The existing file or extracted directory is safely removed from disk.
-2. The new file or archive is placed into the `Mods` directory.
-3. The database record is updated with new file names, new checksums, and revised version/author metadata.
+1. The replacement file or archive is staged, and the mod's currently tracked files are backed up.
+2. The new file or supported archive entries are installed in the `Mods` root.
+3. The database record is updated; if the update fails, the previous files are restored.
 
 ---
 
@@ -205,7 +205,7 @@ ts4ccmanager remove 3
 
 ## Sims 4 Modding Best Practices
 
-1. **Script Mod Depth Limit**: *The Sims 4* engine only loads `.ts4script` files if they are located directly in the root of the `Mods/` folder or at most **one subfolder deep** (`Mods/ModName/`). `ts4ccmanager` extracts archives into single subfolders, keeping them fully compliant with this limit.
+1. **Script Mod Depth Limit**: *The Sims 4* engine only loads `.ts4script` files if they are located directly in the root of the `Mods/` folder or at most **one subfolder deep** (`Mods/ModName/`). `ts4ccmanager` installs supported archive files directly in the `Mods` root.
 2. **Game Patch Preparation**: Before a major game update, export your installed mod list using `ts4ccmanager list --json > installed_mods.json` so you have a complete inventory of what needs updating.
 3. **In-Game Settings**: Remember to enable both **"Enable Custom Content and Mods"** and **"Script Mods Allowed"** in The Sims 4 Game Options -> Other menu after game updates.
 

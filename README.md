@@ -87,6 +87,7 @@ ts4ccmanager remove <id|name>
 - **`name`**: Display name or identifier for the mod.
 - **`file_name`**: Target file name in the Mods directory.
 - **`file_path`**: Absolute target path in the Sims 4 Mods folder.
+- **`installed_files`**: Paths owned by an archive install; ordinary single-file mods may omit this field.
 - **`file_hash`**: SHA256 checksum of the installed file for duplicate detection and integrity tracking.
 - **`version`**: Optional version string.
 - **`author`**: Optional author / creator name.

@@ -84,7 +84,7 @@ This document outlines the technical design, architectural patterns, database sc
 ## Relational Database Schema & Data Models
 
 ### Database Schema
-On startup, `ts4ccmanager` executes the following idempotent schema migration:
+On startup, `ts4ccmanager` creates the schema below and adds `installed_files` to existing databases when needed:
 
 ```sql
 CREATE TABLE IF NOT EXISTS mods (
@@ -92,6 +92,7 @@ CREATE TABLE IF NOT EXISTS mods (
     name TEXT NOT NULL,
     file_name TEXT NOT NULL,
     file_path TEXT NOT NULL UNIQUE,
+    installed_files TEXT NOT NULL DEFAULT '[]',
     file_hash TEXT NOT NULL,
     version TEXT DEFAULT '',
     author TEXT DEFAULT '',
@@ -111,6 +112,7 @@ type Mod struct {
     Name        string    `json:"name"`
     FileName    string    `json:"file_name"`
     FilePath    string    `json:"file_path"`
+    InstalledFiles []string `json:"installed_files,omitempty"`
     FileHash    string    `json:"file_hash"`
     Version     string    `json:"version"`
     Author      string    `json:"author"`
@@ -121,6 +123,8 @@ type Mod struct {
 
 ### Schema Constraints & Invariants
 - `file_path UNIQUE`: Ensures two mods cannot occupy the exact same target path on disk.
+- `installed_files`: Stores the paths owned by archive installs; old records without this list continue to use `file_path`.
+- The service checks every flattened destination before installation and rejects collisions rather than overwriting files it does not own.
 - `idx_mods_file_hash`: Enables O(1) duplicate detection when checking if a file's SHA256 checksum has already been installed.
 - `idx_mods_name`: Optimizes lookup operations when resolving mods by name instead of numeric ID.
 
@@ -143,14 +147,14 @@ type Mod struct {
 3. Query DB by Hash -> If exists, reject with ErrDuplicateMod
      |
      v
-4. Write to Disk (Copy file or Extract Zip to subfolder)
+4. Stage files (copy a mod or flatten supported Zip entries), then install into the Mods root without overwriting existing files
      |
      +---> [Failure] -> Abort (No disk remnants)
      |
      v [Success]
 5. Insert Record into SQLite DB
      |
-     +---> [DB Failure] -> Roll back by deleting created file/folder
+     +---> [DB Failure] -> Roll back by deleting created file(s)
      |
      v [Success]
 [Return Registered Mod]
@@ -159,13 +163,13 @@ type Mod struct {
 ### 2. Updating (`Update`)
 1. Resolves target mod record by ID or Name.
 2. Validates new file format and calculates new SHA256 checksum.
-3. Deletes existing file/folder from disk.
-4. Copies or extracts new file/folder.
-5. Updates SQLite record with new path, hash, version, and author.
+3. Stages the replacement and backs up paths owned by the existing record.
+4. Installs the new file or flattened archive entries in the Mods root.
+5. Updates SQLite; on failure, removes new files and restores the backups.
 
 ### 3. Deletion (`Remove`)
 1. Resolves target mod record by ID or Name.
-2. Deletes the file or directory from the `Mods` folder.
+2. Deletes the tracked file(s) from the `Mods` folder (or the legacy directory referenced by an older record).
 3. Deletes the database row from `mods`.
 
 ---
