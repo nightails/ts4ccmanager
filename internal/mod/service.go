@@ -87,7 +87,7 @@ func (s *Service) Add(srcPath string, opts AddOptions) (*db.Mod, error) {
 		}
 		if len(extracted) == 0 {
 			_ = RemovePath(targetPath)
-			return nil, fmt.Errorf("zip archive contains no files: %s", srcPath)
+			return nil, fmt.Errorf("zip archive contains no supported files: %s", srcPath)
 		}
 	} else {
 		targetFileName = baseName

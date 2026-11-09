@@ -47,9 +47,11 @@ func ExtractZip(zipPath string, destDir string) ([]string, error) {
 		}
 
 		if f.FileInfo().IsDir() {
-			if err := os.MkdirAll(cleanTarget, 0755); err != nil {
-				return nil, fmt.Errorf("failed to create directory %s: %w", cleanTarget, err)
-			}
+			continue
+		}
+
+		ext := strings.ToLower(filepath.Ext(f.Name))
+		if ext != ".package" && ext != ".ts4script" {
 			continue
 		}
 

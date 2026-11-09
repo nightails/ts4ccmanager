@@ -161,6 +161,23 @@ func TestServiceAddZipArchive(t *testing.T) {
 	}
 }
 
+func TestServiceAddZipWithoutSupportedFiles(t *testing.T) {
+	svc, _, modsDir, srcDir := setupTestService(t)
+	zipPath := filepath.Join(srcDir, "unsupported_pack.zip")
+	createTestZip(t, zipPath, map[string]string{
+		"readme.txt":         "readme-content",
+		"nested/archive.zip": "nested-zip-content",
+	})
+
+	_, err := svc.Add(zipPath, AddOptions{})
+	if err == nil || err.Error() != "zip archive contains no supported files: "+zipPath {
+		t.Fatalf("expected no supported files error, got: %v", err)
+	}
+	if PathExists(filepath.Join(modsDir, "unsupported_pack")) {
+		t.Errorf("expected empty extraction directory to be cleaned up")
+	}
+}
+
 func TestServiceUnsupportedFormat(t *testing.T) {
 	svc, _, _, srcDir := setupTestService(t)
 
