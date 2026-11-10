@@ -22,7 +22,7 @@ Comprehensive documentation is available in the [`docs/`](docs/README.md) direct
 ## Installation
 
 ```bash
-go build -o ts4ccmanager .
+go build -o tscc .
 ```
 
 ## CLI Commands
@@ -32,25 +32,25 @@ Manage application settings such as the target Mods folder and database location
 
 ```bash
 # Show current configuration and resolved paths
-ts4ccmanager config show
+tscc config show
 
 # Get a configuration value
-ts4ccmanager config get mods_dir
+tscc config get mods_dir
 
 # Set a custom Sims 4 Mods directory
-ts4ccmanager config set mods_dir "/path/to/Electronic Arts/The Sims 4/Mods"
+tscc config set mods_dir "/path/to/Electronic Arts/The Sims 4/Mods"
 
 # Set a custom database location
-ts4ccmanager config set db_path "/path/to/mods.db"
+tscc config set db_path "/path/to/mods.db"
 ```
 
 ### Adding Mods
 Install a mod file or archive into the Sims 4 Mods folder and register it in the database:
 
 ```bash
-ts4ccmanager add /path/to/mod.package
-ts4ccmanager add /path/to/script_mod.ts4script
-ts4ccmanager add /path/to/archive.zip --name "Custom Content Pack" --version "1.0" --author "CreatorName"
+tscc add /path/to/mod.package
+tscc add /path/to/script_mod.ts4script
+tscc add /path/to/archive.zip --name "Custom Content Pack" --version "1.0" --author "CreatorName"
 ```
 
 ### Listing Mods
@@ -58,24 +58,24 @@ View all installed mods with metadata:
 
 ```bash
 # Display formatted table
-ts4ccmanager list
+tscc list
 
 # Output as JSON
-ts4ccmanager list --json
+tscc list --json
 ```
 
 ### Updating Mods
 Replace an existing mod with a newer version while preserving metadata:
 
 ```bash
-ts4ccmanager update <id|name> /path/to/new_version.package --version "2.0"
+tscc update <id|name> /path/to/new_version.package --version "2.0"
 ```
 
 ### Removing Mods
 Safely delete the mod file(s) from the disk and remove the record from the database:
 
 ```bash
-ts4ccmanager remove <id|name>
+tscc remove <id|name>
 ```
 
 ## Architecture & Database
