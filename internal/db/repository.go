@@ -1,6 +1,7 @@
 package db
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
 	"errors"
@@ -30,12 +31,13 @@ type Repository interface {
 
 // SQLiteRepository implements Repository backed by SQLite.
 type SQLiteRepository struct {
-	db *sql.DB
+	db      *sql.DB
+	queries *Queries
 }
 
 // NewRepository creates a new SQLiteRepository.
 func NewRepository(db *sql.DB) *SQLiteRepository {
-	return &SQLiteRepository{db: db}
+	return &SQLiteRepository{db: db, queries: New(db)}
 }
 
 // Close closes the underlying database connection.
@@ -59,11 +61,17 @@ func (r *SQLiteRepository) InsertMod(mod *Mod) error {
 	if err != nil {
 		return fmt.Errorf("failed to encode installed files: %w", err)
 	}
-	query := `
-		INSERT INTO mods (name, file_name, file_path, installed_files, file_hash, version, author, installed_at, status)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-	`
-	res, err := r.db.Exec(query, mod.Name, mod.FileName, mod.FilePath, installedFiles, mod.FileHash, mod.Version, mod.Author, mod.InstalledAt, mod.Status)
+	res, err := r.queries.InsertMod(context.Background(), InsertModParams{
+		Name:           mod.Name,
+		FileName:       mod.FileName,
+		FilePath:       mod.FilePath,
+		InstalledFiles: installedFiles,
+		FileHash:       mod.FileHash,
+		Version:        sql.NullString{String: mod.Version, Valid: true},
+		Author:         sql.NullString{String: mod.Author, Valid: true},
+		InstalledAt:    sql.NullTime{Time: mod.InstalledAt, Valid: true},
+		Status:         sql.NullString{String: mod.Status, Valid: true},
+	})
 	if err != nil {
 		return fmt.Errorf("failed to insert mod: %w", err)
 	}
@@ -78,49 +86,26 @@ func (r *SQLiteRepository) InsertMod(mod *Mod) error {
 
 // GetModByID retrieves a mod by its primary ID.
 func (r *SQLiteRepository) GetModByID(id int64) (*Mod, error) {
-	query := `
-		SELECT id, name, file_name, file_path, installed_files, file_hash, version, author, installed_at, status
-		FROM mods
-		WHERE id = ?
-	`
-	row := r.db.QueryRow(query, id)
-	return scanMod(row)
+	record, err := r.queries.GetModByID(context.Background(), id)
+	return mapModRecord(record, err)
 }
 
 // GetModByName retrieves a mod by its name.
 func (r *SQLiteRepository) GetModByName(name string) (*Mod, error) {
-	query := `
-		SELECT id, name, file_name, file_path, installed_files, file_hash, version, author, installed_at, status
-		FROM mods
-		WHERE name = ?
-		LIMIT 1
-	`
-	row := r.db.QueryRow(query, name)
-	return scanMod(row)
+	record, err := r.queries.GetModByName(context.Background(), name)
+	return mapModRecord(record, err)
 }
 
 // GetModByPath retrieves a mod by its file path.
 func (r *SQLiteRepository) GetModByPath(filePath string) (*Mod, error) {
-	query := `
-		SELECT id, name, file_name, file_path, installed_files, file_hash, version, author, installed_at, status
-		FROM mods
-		WHERE file_path = ?
-		LIMIT 1
-	`
-	row := r.db.QueryRow(query, filePath)
-	return scanMod(row)
+	record, err := r.queries.GetModByPath(context.Background(), filePath)
+	return mapModRecord(record, err)
 }
 
 // GetModByHash retrieves a mod by its SHA256 checksum.
 func (r *SQLiteRepository) GetModByHash(fileHash string) (*Mod, error) {
-	query := `
-		SELECT id, name, file_name, file_path, installed_files, file_hash, version, author, installed_at, status
-		FROM mods
-		WHERE file_hash = ?
-		LIMIT 1
-	`
-	row := r.db.QueryRow(query, fileHash)
-	return scanMod(row)
+	record, err := r.queries.GetModByHash(context.Background(), fileHash)
+	return mapModRecord(record, err)
 }
 
 // FindModByIDOrName attempts to find a mod by numeric ID, falling back to name lookup.
@@ -139,30 +124,19 @@ func (r *SQLiteRepository) FindModByIDOrName(identifier string) (*Mod, error) {
 
 // ListMods returns all installed mods sorted by ID.
 func (r *SQLiteRepository) ListMods() ([]*Mod, error) {
-	query := `
-		SELECT id, name, file_name, file_path, installed_files, file_hash, version, author, installed_at, status
-		FROM mods
-		ORDER BY id ASC
-	`
-	rows, err := r.db.Query(query)
+	records, err := r.queries.ListMods(context.Background())
 	if err != nil {
 		return nil, fmt.Errorf("failed to query mods: %w", err)
 	}
-	defer rows.Close()
 
 	var mods []*Mod
-	for rows.Next() {
-		m, err := scanMod(rows)
+	for _, record := range records {
+		m, err := mapModRecord(record, nil)
 		if err != nil {
 			return nil, err
 		}
 		mods = append(mods, m)
 	}
-
-	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("error during mods row iteration: %w", err)
-	}
-
 	return mods, nil
 }
 
@@ -172,12 +146,17 @@ func (r *SQLiteRepository) UpdateMod(mod *Mod) error {
 	if err != nil {
 		return fmt.Errorf("failed to encode installed files: %w", err)
 	}
-	query := `
-		UPDATE mods
-		SET name = ?, file_name = ?, file_path = ?, installed_files = ?, file_hash = ?, version = ?, author = ?, status = ?
-		WHERE id = ?
-	`
-	res, err := r.db.Exec(query, mod.Name, mod.FileName, mod.FilePath, installedFiles, mod.FileHash, mod.Version, mod.Author, mod.Status, mod.ID)
+	res, err := r.queries.UpdateMod(context.Background(), UpdateModParams{
+		Name:           mod.Name,
+		FileName:       mod.FileName,
+		FilePath:       mod.FilePath,
+		InstalledFiles: installedFiles,
+		FileHash:       mod.FileHash,
+		Version:        sql.NullString{String: mod.Version, Valid: true},
+		Author:         sql.NullString{String: mod.Author, Valid: true},
+		Status:         sql.NullString{String: mod.Status, Valid: true},
+		ID:             mod.ID,
+	})
 	if err != nil {
 		return fmt.Errorf("failed to update mod: %w", err)
 	}
@@ -195,8 +174,7 @@ func (r *SQLiteRepository) UpdateMod(mod *Mod) error {
 
 // DeleteMod deletes a mod record by ID.
 func (r *SQLiteRepository) DeleteMod(id int64) error {
-	query := `DELETE FROM mods WHERE id = ?`
-	res, err := r.db.Exec(query, id)
+	res, err := r.queries.DeleteMod(context.Background(), id)
 	if err != nil {
 		return fmt.Errorf("failed to delete mod: %w", err)
 	}
@@ -212,23 +190,32 @@ func (r *SQLiteRepository) DeleteMod(id int64) error {
 	return nil
 }
 
-type rowScanner interface {
-	Scan(dest ...any) error
-}
-
-func scanMod(scanner rowScanner) (*Mod, error) {
-	var m Mod
-	var installedFiles string
-	if err := scanner.Scan(&m.ID, &m.Name, &m.FileName, &m.FilePath, &installedFiles, &m.FileHash, &m.Version, &m.Author, &m.InstalledAt, &m.Status); err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, ErrModNotFound
-		}
+func mapModRecord(record ModRecord, err error) (*Mod, error) {
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, ErrModNotFound
+	}
+	if err != nil {
 		return nil, fmt.Errorf("failed to scan mod: %w", err)
 	}
-	if err := json.Unmarshal([]byte(installedFiles), &m.InstalledFiles); err != nil {
+	var installedFiles []string
+	if err := json.Unmarshal([]byte(record.InstalledFiles), &installedFiles); err != nil {
 		return nil, fmt.Errorf("failed to decode installed files: %w", err)
 	}
-	return &m, nil
+	mod := &Mod{
+		ID:             record.ID,
+		Name:           record.Name,
+		FileName:       record.FileName,
+		FilePath:       record.FilePath,
+		InstalledFiles: installedFiles,
+		FileHash:       record.FileHash,
+		Version:        record.Version.String,
+		Author:         record.Author.String,
+		Status:         record.Status.String,
+	}
+	if record.InstalledAt.Valid {
+		mod.InstalledAt = record.InstalledAt.Time
+	}
+	return mod, nil
 }
 
 func marshalInstalledFiles(files []string) (string, error) {

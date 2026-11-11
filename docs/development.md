@@ -29,8 +29,13 @@ ts4ccmanager/
 │   │   └── config_test.go
 │   ├── db/                       # Database models, schema, and repository
 │   │   ├── db.go                 # Connection lifecycle and migrations
-│   │   ├── models.go             # Data entities
-│   │   ├── repository.go         # SQL CRUD implementation
+│   │   ├── models.go             # Domain data entity
+│   │   ├── repository.go         # Repository mapping to generated queries
+│   │   ├── db.sql.go             # sqlc query runner
+│   │   ├── models.sql.go         # sqlc database records
+│   │   ├── query.sql.go          # sqlc-generated query methods
+│   │   ├── sql/                  # sqlc schema and named queries
+│   │   ├── migrations/           # Embedded Goose migrations
 │   │   └── repository_test.go    # In-memory database test suite
 │   ├── detector/                 # Steam Proton path detection
 │   │   ├── steam.go              # VDF parsing and path resolution
@@ -97,6 +102,13 @@ go test -cover ./...
 
 3. **CLI Buffer Redirection**:
    CLI tests redirect `rootCmd.SetOut(buf)` and `rootCmd.SetErr(buf)` to inspect output strings and verify stdout formatting without printing to terminal streams.
+
+### Database Schema Workflow
+
+- Edit `internal/db/sql/schema.sql` and keep it consistent with the numbered migrations in `internal/db/migrations/`.
+- Define database operations as named queries in `internal/db/sql/query.sql`.
+- Run `sqlc generate` from the project root to update the generated Go files in `internal/db/`; do not edit generated files by hand.
+- `db.Open` embeds and applies Goose migrations automatically. Preserve the legacy `installed_files` upgrade in `internal/db/db.go` for databases created before Goose was introduced.
 
 ---
 

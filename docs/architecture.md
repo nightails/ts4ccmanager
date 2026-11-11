@@ -70,7 +70,8 @@ This document outlines the technical design, architectural patterns, database sc
 - **Key Types**:
   - `Mod`: Entity representing a tracked mod.
   - `Repository`: Interface defining data persistence contracts.
-  - `SQLiteRepository`: Concrete implementation wrapping `*sql.DB`.
+  - `SQLiteRepository`: Concrete implementation wrapping sqlc-generated `*Queries`.
+- **Database tooling**: Goose applies embedded migrations from `internal/db/migrations/`; sqlc generates typed queries and `ModRecord` from `internal/db/sql/`.
 
 ### 5. `internal/mod/`
 - **Purpose**: Core domain orchestration.
@@ -84,7 +85,7 @@ This document outlines the technical design, architectural patterns, database sc
 ## Relational Database Schema & Data Models
 
 ### Database Schema
-On startup, `ts4ccmanager` creates the schema below and adds `installed_files` to existing databases when needed:
+The canonical schema for sqlc is `internal/db/sql/schema.sql`; the corresponding initial Goose migration is `internal/db/migrations/00001_create_initial_schema.sql`. On startup, `db.Open` applies embedded Goose migrations and then adds `installed_files` to legacy databases that predate that column:
 
 ```sql
 CREATE TABLE IF NOT EXISTS mods (
@@ -103,6 +104,11 @@ CREATE TABLE IF NOT EXISTS mods (
 CREATE INDEX IF NOT EXISTS idx_mods_name ON mods(name);
 CREATE INDEX IF NOT EXISTS idx_mods_file_hash ON mods(file_hash);
 ```
+
+### SQL Generation & Migrations
+`sqlc.yaml` points sqlc at `internal/db/sql/schema.sql` and `internal/db/sql/query.sql`. Run `sqlc generate` after changing the schema or named queries; generated `db.sql.go`, `models.sql.go`, and `query.sql.go` belong to package `db`. The generated `ModRecord` is kept distinct from the domain-facing `Mod`, and `SQLiteRepository` maps between them.
+
+New database changes should be added as numbered Goose migrations under `internal/db/migrations/`, with both `-- +goose Up` and `-- +goose Down` sections. `db.Open` embeds and applies these migrations through Goose; keep `schema.sql` in sync so sqlc can type-check the queries against the current schema.
 
 ### Mod Entity Mapping
 

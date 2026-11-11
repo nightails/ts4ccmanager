@@ -1,30 +1,20 @@
 package db
 
 import (
+	"context"
 	"database/sql"
+	"embed"
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 
+	"github.com/pressly/goose/v3"
 	_ "modernc.org/sqlite"
 )
 
-const schema = `
-CREATE TABLE IF NOT EXISTS mods (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    file_name TEXT NOT NULL,
-    file_path TEXT NOT NULL UNIQUE,
-    installed_files TEXT NOT NULL DEFAULT '[]',
-    file_hash TEXT NOT NULL,
-    version TEXT DEFAULT '',
-    author TEXT DEFAULT '',
-    installed_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    status TEXT DEFAULT 'active'
-);
-CREATE INDEX IF NOT EXISTS idx_mods_name ON mods(name);
-CREATE INDEX IF NOT EXISTS idx_mods_file_hash ON mods(file_hash);
-`
+//go:embed migrations/*.sql
+var migrationFiles embed.FS
 
 // Open initializes and connects to the SQLite database at the specified path, running schema migrations.
 func Open(dbPath string) (*sql.DB, error) {
@@ -39,15 +29,28 @@ func Open(dbPath string) (*sql.DB, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to open database: %w", err)
 	}
+	if dbPath == ":memory:" {
+		db.SetMaxOpenConns(1)
+	}
 
 	if err := db.Ping(); err != nil {
 		_ = db.Close()
 		return nil, fmt.Errorf("failed to ping database: %w", err)
 	}
 
-	if _, err := db.Exec(schema); err != nil {
+	migrations, err := fs.Sub(migrationFiles, "migrations")
+	if err != nil {
 		_ = db.Close()
-		return nil, fmt.Errorf("failed to initialize schema: %w", err)
+		return nil, fmt.Errorf("failed to load migrations: %w", err)
+	}
+	provider, err := goose.NewProvider(goose.DialectSQLite3, db, migrations)
+	if err != nil {
+		_ = db.Close()
+		return nil, fmt.Errorf("failed to initialize migrations: %w", err)
+	}
+	if _, err := provider.Up(context.Background()); err != nil {
+		_ = db.Close()
+		return nil, fmt.Errorf("failed to migrate database: %w", err)
 	}
 	if err := ensureInstalledFilesColumn(db); err != nil {
 		_ = db.Close()

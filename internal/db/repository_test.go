@@ -193,6 +193,14 @@ func TestOpenMigratesLegacyModsTable(t *testing.T) {
 	if mod.FilePath != "/mods/legacy_pack" || len(mod.InstalledFiles) != 0 {
 		t.Errorf("legacy record was not preserved with empty installed-file list: %+v", mod)
 	}
+
+	var appliedMigrations int
+	if err := database.QueryRow("SELECT COUNT(*) FROM goose_db_version WHERE version_id = 1 AND is_applied = 1").Scan(&appliedMigrations); err != nil {
+		t.Fatalf("failed to verify Goose migration: %v", err)
+	}
+	if appliedMigrations != 1 {
+		t.Errorf("expected initial Goose migration to be recorded, got %d applied migrations", appliedMigrations)
+	}
 }
 
 func TestRepositoryNotFoundErrors(t *testing.T) {
