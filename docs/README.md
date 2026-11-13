@@ -19,11 +19,11 @@ A practical walkthrough for players and mod managers:
 
 ### 2. [CLI Reference](cli-reference.md)
 Detailed specification for all command-line interface commands:
-- `ts4ccmanager add`
-- `ts4ccmanager list`
-- `ts4ccmanager update`
-- `ts4ccmanager remove`
-- `ts4ccmanager config` (`show`, `get`, `set`)
+- `tscc add`
+- `tscc list`
+- `tscc update`
+- `tscc remove`
+- `tscc config` (`show`, `get`, `set`)
 - Command flags, arguments, exit codes, and output formats.
 
 ### 3. [Configuration Guide](configuration.md)
@@ -53,18 +53,18 @@ Guidelines for building, testing, and extending `ts4ccmanager`:
 
 ```bash
 # 1. Inspect resolved configuration (automatically detects Steam Proton on Linux)
-ts4ccmanager config show
+tscc config show
 
 # 2. Add custom content or a script mod
-ts4ccmanager add ~/Downloads/curly_hair.package --author "SimArtist" --version "1.0"
-ts4ccmanager add ~/Downloads/gameplay_overhaul.zip --name "Gameplay Overhaul"
+tscc add ~/Downloads/curly_hair.package --author "SimArtist" --version "1.0"
+tscc add ~/Downloads/gameplay_overhaul.zip --name "Gameplay Overhaul"
 
 # 3. View installed mods
-ts4ccmanager list
+tscc list
 
 # 4. Update an existing mod
-ts4ccmanager update "Gameplay Overhaul" ~/Downloads/gameplay_overhaul_v2.zip --version "2.0"
+tscc update "Gameplay Overhaul" ~/Downloads/gameplay_overhaul_v2.zip --version "2.0"
 
 # 5. Remove a mod
-ts4ccmanager remove "curly_hair"
+tscc remove "curly_hair"
 ```

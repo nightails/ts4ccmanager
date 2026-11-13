@@ -60,10 +60,10 @@ To compile the application binary:
 
 ```bash
 # Build the binary in the project root
-go build -o ts4ccmanager .
+go build -o tscc ./cmd/tscc
 
 # Run directly without building a separate binary
-go run main.go --help
+go run ./cmd/tscc --help
 ```
 
 ---

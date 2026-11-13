@@ -74,7 +74,7 @@ The `config.json` schema supports two primary settings:
 
 1. **Explicit Setting**: If `mods_dir` is configured in `config.json`, `ts4ccmanager` verifies the path with `os.Stat`. If the directory does not exist, an error is returned.
 2. **Fallback Auto-Detection**: If `mods_dir` is not configured (`""`), the Steam Proton detection engine is invoked.
-3. **Error Reporting**: If detection fails, the tool guides the user to set the path manually using `ts4ccmanager config set mods_dir <path>`.
+3. **Error Reporting**: If detection fails, the tool guides the user to set the path manually using `tscc config set mods_dir <path>`.
 
 ### Resolution Flow for `db_path`
 
@@ -111,7 +111,7 @@ On Linux systems (including Steam Deck and SteamOS), *The Sims 4* runs inside a 
 
 ### Viewing Active Configuration
 ```bash
-ts4ccmanager config show
+tscc config show
 ```
 Example output:
 ```text
@@ -124,14 +124,14 @@ DB PATH (RESOLVED):             /home/user/.config/ts4ccmanager/mods.db
 
 ### Reading a Specific Key
 ```bash
-ts4ccmanager config get mods_dir
-ts4ccmanager config get db_path
+tscc config get mods_dir
+tscc config get db_path
 ```
 
 ### Setting a Key
 ```bash
-ts4ccmanager config set mods_dir "/home/user/Games/The Sims 4/Mods"
-ts4ccmanager config set db_path "/home/user/Documents/ts4_backup.db"
+tscc config set mods_dir "/home/user/Games/The Sims 4/Mods"
+tscc config set db_path "/home/user/Documents/ts4_backup.db"
 ```
 
 ---

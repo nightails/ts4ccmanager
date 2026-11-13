@@ -42,7 +42,7 @@ To open the placeholder terminal interface, run `tscc -t` (or `tscc --tui`).
 Before installing mods, verify that `ts4ccmanager` has located your game's `Mods` directory:
 
 ```bash
-ts4ccmanager config show
+tscc config show
 ```
 
 Output example:
@@ -60,13 +60,13 @@ If automatic detection does not find your game folder (e.g. non-Steam installati
 
 ```bash
 # Linux native / Wine prefix
-ts4ccmanager config set mods_dir "/path/to/Electronic Arts/The Sims 4/Mods"
+tscc config set mods_dir "/path/to/Electronic Arts/The Sims 4/Mods"
 
 # Windows (Command Prompt / PowerShell)
-ts4ccmanager config set mods_dir "C:\Users\<User>\Documents\Electronic Arts\The Sims 4\Mods"
+tscc config set mods_dir "C:\Users\<User>\Documents\Electronic Arts\The Sims 4\Mods"
 
 # macOS
-ts4ccmanager config set mods_dir "/Users/<User>/Documents/Electronic Arts/The Sims 4/Mods"
+tscc config set mods_dir "/Users/<User>/Documents/Electronic Arts/The Sims 4/Mods"
 ```
 
 ---
@@ -75,14 +75,14 @@ ts4ccmanager config set mods_dir "/Users/<User>/Documents/Electronic Arts/The Si
 
 The `add` command handles files and archives in one consistent command:
 ```bash
-ts4ccmanager add <path-to-file> [flags]
+tscc add <path-to-file> [flags]
 ```
 
 ### Single `.package` Files
 `.package` files contain 3D meshes, textures, CAS items, furniture, overrides, or tuning mods.
 
 ```bash
-ts4ccmanager add ~/Downloads/boho_dress.package
+tscc add ~/Downloads/boho_dress.package
 ```
 *Result:* The file is copied directly into your `Mods` directory and registered in the database.
 
@@ -90,7 +90,7 @@ ts4ccmanager add ~/Downloads/boho_dress.package
 `.ts4script` files contain compiled Python code for complex gameplay mods and UI extensions.
 
 ```bash
-ts4ccmanager add ~/Downloads/custom_interactions.ts4script
+tscc add ~/Downloads/custom_interactions.ts4script
 ```
 *Result:* The script mod is placed directly in the `Mods` root directory to ensure The Sims 4 game engine can execute it.
 
@@ -98,7 +98,7 @@ ts4ccmanager add ~/Downloads/custom_interactions.ts4script
 Many creators distribute mod sets or multi-part mods in `.zip` archives. `ts4ccmanager` extracts only `.package` and `.ts4script` files directly into the `Mods` root; paths inside the archive are flattened to filenames.
 
 ```bash
-ts4ccmanager add ~/Downloads/kitchen_set.zip
+tscc add ~/Downloads/kitchen_set.zip
 ```
 *Result:* Copies supported files such as `sofa.package` and `scripts/gameplay.ts4script` to `Mods/sofa.package` and `Mods/gameplay.ts4script`, then tracks all files with the archive's mod record. If two archive entries have the same filename, or a destination already exists, installation fails rather than overwriting it.
 
@@ -106,7 +106,7 @@ ts4ccmanager add ~/Downloads/kitchen_set.zip
 You can attach human-readable metadata when installing a mod:
 
 ```bash
-ts4ccmanager add ~/Downloads/cas_eyelashes.package \
+tscc add ~/Downloads/cas_eyelashes.package \
   --name "3D Eyelashes V4" \
   --author "Kijiko" \
   --version "4.1"
@@ -121,7 +121,7 @@ Supported flags:
 `ts4ccmanager` computes a SHA256 checksum for each file before copying or extracting. If an identical mod file is already installed, the command prevents duplicate installation:
 
 ```bash
-ts4ccmanager add ~/Downloads/duplicate_item.package
+tscc add ~/Downloads/duplicate_item.package
 # Error: mod is already installed (duplicate checksum found): Duplicate Item (ID: 4)
 ```
 
@@ -130,10 +130,10 @@ ts4ccmanager add ~/Downloads/duplicate_item.package
 ## Viewing Installed Content
 
 ### Standard Table Output
-Run `ts4ccmanager list` to view all tracked mods:
+Run `tscc list` to view all tracked mods:
 
 ```bash
-ts4ccmanager list
+tscc list
 ```
 
 Output:
@@ -148,7 +148,7 @@ ID   NAME                FILE NAME             VERSION   AUTHOR    STATUS   INST
 For scripting, backup verification, or integrating with other tools, use the `--json` flag:
 
 ```bash
-ts4ccmanager list --json
+tscc list --json
 ```
 
 Output:
@@ -176,10 +176,10 @@ When a mod creator releases a new version, update it using either its numeric ID
 
 ```bash
 # Update by name
-ts4ccmanager update "Gameplay Overhaul" ~/Downloads/gameplay_overhaul_v2_1.zip --version "2.1"
+tscc update "Gameplay Overhaul" ~/Downloads/gameplay_overhaul_v2_1.zip --version "2.1"
 
 # Update by ID
-ts4ccmanager update 1 ~/Downloads/cas_eyelashes_v5.package --version "5.0"
+tscc update 1 ~/Downloads/cas_eyelashes_v5.package --version "5.0"
 ```
 
 What happens during an update:
@@ -195,10 +195,10 @@ To uninstall a mod and delete all associated files from disk:
 
 ```bash
 # Remove by name
-ts4ccmanager remove "Living Room Set"
+tscc remove "Living Room Set"
 
 # Remove by ID
-ts4ccmanager remove 3
+tscc remove 3
 ```
 
 `ts4ccmanager` removes the file or folder from the game directory and cleans up the SQLite record, guaranteeing no orphaned files remain.
@@ -208,7 +208,7 @@ ts4ccmanager remove 3
 ## Sims 4 Modding Best Practices
 
 1. **Script Mod Depth Limit**: *The Sims 4* engine only loads `.ts4script` files if they are located directly in the root of the `Mods/` folder or at most **one subfolder deep** (`Mods/ModName/`). `ts4ccmanager` installs supported archive files directly in the `Mods` root.
-2. **Game Patch Preparation**: Before a major game update, export your installed mod list using `ts4ccmanager list --json > installed_mods.json` so you have a complete inventory of what needs updating.
+2. **Game Patch Preparation**: Before a major game update, export your installed mod list using `tscc list --json > installed_mods.json` so you have a complete inventory of what needs updating.
 3. **In-Game Settings**: Remember to enable both **"Enable Custom Content and Mods"** and **"Script Mods Allowed"** in The Sims 4 Game Options -> Other menu after game updates.
 
 ---
@@ -219,12 +219,12 @@ ts4ccmanager remove 3
 - **Cause**: Steam Proton installation was not found at standard paths.
 - **Solution**: Manually configure your mods folder path:
   ```bash
-  ts4ccmanager config set mods_dir "/path/to/The Sims 4/Mods"
+  tscc config set mods_dir "/path/to/The Sims 4/Mods"
   ```
 
 ### "mod is already installed (duplicate checksum found)"
 - **Cause**: You tried to install a file that matches an existing mod's SHA256 hash.
-- **Solution**: Check `ts4ccmanager list` to find the existing entry. If you intended to replace it with a new release, use `ts4ccmanager update <id|name> <new-file>`.
+- **Solution**: Check `tscc list` to find the existing entry. If you intended to replace it with a new release, use `tscc update <id|name> <new-file>`.
 
 ### "unsupported file format"
 - **Cause**: The file extension is not `.package`, `.ts4script`, or `.zip`.

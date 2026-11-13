@@ -7,7 +7,7 @@ Complete reference for all commands, arguments, flags, and outputs supported by 
 ## Command Hierarchy
 
 ```text
-ts4ccmanager [command]
+tscc [command]
 ├── -t, --tui
 ├── add <file-path>
 ├── list [--json]
@@ -31,13 +31,13 @@ ts4ccmanager [command]
 
 ## Commands
 
-### `ts4ccmanager add`
+### `tscc add`
 
 Validates, copies, or extracts a mod file into the Sims 4 Mods directory and records it in the database.
 
 #### Syntax
 ```bash
-ts4ccmanager add <file-path> [flags]
+tscc add <file-path> [flags]
 ```
 
 #### Arguments
@@ -52,7 +52,7 @@ ts4ccmanager add <file-path> [flags]
 
 #### Example
 ```bash
-ts4ccmanager add ~/Downloads/modern_couch.package -n "Modern Couch" -a "Peacemaker" -v "1.0"
+tscc add ~/Downloads/modern_couch.package -n "Modern Couch" -a "Peacemaker" -v "1.0"
 ```
 
 #### Output
@@ -71,13 +71,13 @@ Successfully added mod "Modern Couch" (ID: 1)
 
 ---
 
-### `ts4ccmanager list`
+### `tscc list`
 
 Displays all mods and custom content currently registered in the database.
 
 #### Syntax
 ```bash
-ts4ccmanager list [flags]
+tscc list [flags]
 ```
 
 #### Flags
@@ -87,7 +87,7 @@ ts4ccmanager list [flags]
 
 #### Tabular Example
 ```bash
-ts4ccmanager list
+tscc list
 ```
 ```text
 ID   NAME           FILE NAME            VERSION   AUTHOR       STATUS   INSTALLED AT
@@ -97,7 +97,7 @@ ID   NAME           FILE NAME            VERSION   AUTHOR       STATUS   INSTALL
 
 #### JSON Example
 ```bash
-ts4ccmanager list --json
+tscc list --json
 ```
 ```json
 [
@@ -117,13 +117,13 @@ ts4ccmanager list --json
 
 ---
 
-### `ts4ccmanager update`
+### `tscc update`
 
 Replaces an existing mod's file(s) on disk, computes new checksums, and updates metadata in the database.
 
 #### Syntax
 ```bash
-ts4ccmanager update <id|name> <new-file-path> [flags]
+tscc update <id|name> <new-file-path> [flags]
 ```
 
 #### Arguments
@@ -139,7 +139,7 @@ ts4ccmanager update <id|name> <new-file-path> [flags]
 
 #### Example
 ```bash
-ts4ccmanager update "Modern Couch" ~/Downloads/modern_couch_v2.package --version "2.0"
+tscc update "Modern Couch" ~/Downloads/modern_couch_v2.package --version "2.0"
 ```
 
 #### Output
@@ -153,13 +153,13 @@ Successfully updated mod "Modern Couch" (ID: 1)
 
 ---
 
-### `ts4ccmanager remove`
+### `tscc remove`
 
 Deletes the mod file or directory from the Sims 4 Mods directory and deletes the record from the database.
 
 #### Syntax
 ```bash
-ts4ccmanager remove <id|name>
+tscc remove <id|name>
 ```
 
 #### Arguments
@@ -167,9 +167,9 @@ ts4ccmanager remove <id|name>
 
 #### Example
 ```bash
-ts4ccmanager remove 1
+tscc remove 1
 # or
-ts4ccmanager remove "Modern Couch"
+tscc remove "Modern Couch"
 ```
 
 #### Output
@@ -179,16 +179,16 @@ Successfully removed mod "Modern Couch"
 
 ---
 
-### `ts4ccmanager config`
+### `tscc config`
 
 Manage application configuration options.
 
 #### Subcommands
 
-#### 1. `ts4ccmanager config show`
+#### 1. `tscc config show`
 Displays active configuration file path and resolved directory targets.
 ```bash
-ts4ccmanager config show
+tscc config show
 ```
 ```text
 CONFIG FILE:                    /home/user/.config/ts4ccmanager/config.json
@@ -198,17 +198,17 @@ DB PATH (CONFIGURED):
 DB PATH (RESOLVED):             /home/user/.config/ts4ccmanager/mods.db
 ```
 
-#### 2. `ts4ccmanager config get <key>`
+#### 2. `tscc config get <key>`
 Retrieves the raw value of a configuration key.
 ```bash
-ts4ccmanager config get mods_dir
+tscc config get mods_dir
 ```
 
-#### 3. `ts4ccmanager config set <key> <value>`
+#### 3. `tscc config set <key> <value>`
 Updates a configuration setting and persists it to `config.json`.
 ```bash
-ts4ccmanager config set mods_dir "/path/to/Mods"
-ts4ccmanager config set db_path "/path/to/custom_mods.db"
+tscc config set mods_dir "/path/to/Mods"
+tscc config set db_path "/path/to/custom_mods.db"
 ```
 
 #### Valid Configuration Keys
