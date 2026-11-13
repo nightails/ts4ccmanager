@@ -1,12 +1,13 @@
-package cmd
+package cli
 
 import (
 	"encoding/json"
 	"fmt"
 	"text/tabwriter"
 
-	"github.com/spf13/cobra"
 	"ts4ccmanager/internal/db"
+
+	"github.com/spf13/cobra"
 )
 
 var listCmd = &cobra.Command{

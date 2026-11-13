@@ -157,7 +157,7 @@ To add a new CLI command to `ts4ccmanager`:
        rootCmd.AddCommand(toggleCmd)
    }
    ```
-3. **Add Integration Tests in `cmd/cmd_test.go`**:
+3. **Add Integration Tests in `../internal/cli/cmd_test.go`**:
    Verify CLI flag parsing, execution, and output handling.
 4. **Update Documentation**:
    Update `docs/cli-reference.md` and `docs/user-guide.md` to document the new command.

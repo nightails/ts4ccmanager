@@ -1,10 +1,11 @@
-package cmd
+package cli
 
 import (
 	"fmt"
 
-	"github.com/spf13/cobra"
 	"ts4ccmanager/internal/mod"
+
+	"github.com/spf13/cobra"
 )
 
 var addCmd = &cobra.Command{

@@ -1,11 +1,12 @@
-package cmd
+package cli
 
 import (
 	"fmt"
 	"text/tabwriter"
 
-	"github.com/spf13/cobra"
 	"ts4ccmanager/internal/config"
+
+	"github.com/spf13/cobra"
 )
 
 var configCmd = &cobra.Command{

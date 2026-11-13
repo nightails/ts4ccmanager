@@ -1,13 +1,14 @@
-package cmd
+package cli
 
 import (
 	"fmt"
 	"os"
 
-	"github.com/spf13/cobra"
 	"ts4ccmanager/internal/config"
 	"ts4ccmanager/internal/db"
 	"ts4ccmanager/internal/mod"
+
+	"github.com/spf13/cobra"
 )
 
 var rootCmd = &cobra.Command{

@@ -1,4 +1,4 @@
-package cmd
+package cli
 
 import (
 	"bytes"
@@ -7,10 +7,11 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
 	"ts4ccmanager/internal/config"
 	"ts4ccmanager/internal/db"
+
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 )
 
 func executeCommand(args ...string) (string, error) {
