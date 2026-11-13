@@ -27,6 +27,8 @@ go build -o tscc .
 
 ## CLI Commands
 
+Launch the placeholder terminal interface with `tscc -t` (or `tscc --tui`).
+
 ### Configuration
 Manage application settings such as the target Mods folder and database location:
 

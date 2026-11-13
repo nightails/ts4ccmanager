@@ -31,6 +31,8 @@ Managing Sims 4 custom content manually often leads to disorganized `Mods` folde
 - Stores metadata (mod name, author, version, install date, active status) in a lightweight SQLite database.
 - Completely removes all associated files when you uninstall a mod.
 
+To open the placeholder terminal interface, run `tscc -t` (or `tscc --tui`).
+
 ---
 
 ## Prerequisites & Initial Setup

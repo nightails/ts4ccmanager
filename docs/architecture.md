@@ -18,7 +18,7 @@ This document outlines the technical design, architectural patterns, database sc
 ```text
 +-------------------------------------------------------------+
 |                         CLI Layer                           |
-|      (cmd/root.go, cmd/add.go, cmd/list.go, cmd/config.go)  |
+|  (internal/cli/root.go, internal/cli/add.go, list.go, etc.) |
 +------------------------------+------------------------------+
                                |
                                v
@@ -45,7 +45,7 @@ This document outlines the technical design, architectural patterns, database sc
 
 ## Package Breakdown & Responsibilities
 
-### 1. `cmd/`
+### 1. `internal/cli/`
 - **Purpose**: CLI command declarations, argument parsing, flag bindings, and terminal formatting.
 - **Framework**: `github.com/spf13/cobra`.
 - **Output Rendering**: Uses Go's `text/tabwriter` for aligned tabular display and `encoding/json` for machine-readable output.
@@ -79,6 +79,10 @@ This document outlines the technical design, architectural patterns, database sc
   - `Service`: Coordinates between repository and filesystem operations.
   - `FileManager`: File copying, existence checks, SHA256 hashing (`CalculateFileHash`), and deletion.
   - `Extractor`: Format validation and secure archive extraction (`ExtractZip`).
+
+### 6. `internal/tui/`
+- **Purpose**: Bubble Tea terminal user interface, launched from the CLI with `tscc -t` or `tscc --tui`.
+- **Current state**: Provides a placeholder screen and basic quit-key handling; future interactive workflows can be added here.
 
 ---
 

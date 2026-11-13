@@ -8,6 +8,7 @@ Complete reference for all commands, arguments, flags, and outputs supported by 
 
 ```text
 ts4ccmanager [command]
+├── -t, --tui
 ├── add <file-path>
 ├── list [--json]
 ├── update <id|name> <new-file-path>
@@ -23,6 +24,7 @@ ts4ccmanager [command]
 ## Global Flags & Environment
 
 - `-h, --help`: Displays help text for any command or subcommand.
+- `-t, --tui`: Launches the placeholder terminal user interface (for example, `tscc -t`).
 - `XDG_CONFIG_HOME`: If defined on Unix systems, `ts4ccmanager` stores its configuration under `$XDG_CONFIG_HOME/ts4ccmanager/`. Defaults to `~/.config/ts4ccmanager/`.
 
 ---

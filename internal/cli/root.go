@@ -7,6 +7,7 @@ import (
 	"ts4ccmanager/internal/config"
 	"ts4ccmanager/internal/db"
 	"ts4ccmanager/internal/mod"
+	"ts4ccmanager/internal/tui"
 
 	"github.com/spf13/cobra"
 )
@@ -16,6 +17,13 @@ var rootCmd = &cobra.Command{
 	Short: "A lightweight mod manager for The Sims 4",
 	Long: `ts4ccmanager is a lightweight, terminal-based mod and custom content (CC) manager for The Sims 4.
 It simplifies installing, updating, tracking, and removing mods with an embedded SQLite database.`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		launchTUI, _ := cmd.Flags().GetBool("tui")
+		if launchTUI {
+			return tui.Run()
+		}
+		return cmd.Help()
+	},
 }
 
 // Execute runs the root command.
@@ -58,4 +66,8 @@ func initModService() (*mod.Service, *db.SQLiteRepository, *config.Config, error
 
 	svc := mod.NewService(repo, modsDir)
 	return svc, repo, cfg, nil
+}
+
+func init() {
+	rootCmd.Flags().BoolP("tui", "t", false, "Launch the terminal user interface")
 }
