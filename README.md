@@ -1,5 +1,7 @@
 # ts4ccmanager
 
+> **⚠️ Early Development Stage**: This project is in active early development. APIs, configuration formats, and the database schema are subject to breaking changes without notice. Use at your own risk, and be prepared to migrate your data when upgrading.
+
 `ts4ccmanager` is a lightweight mod manager for the game *The Sims 4*. It's a simple tool running in the terminal, written in Go, for quickly adding, managing, and removing mods and custom content (CC) for the game.
 
 ## Features
